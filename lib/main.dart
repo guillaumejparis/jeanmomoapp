@@ -12,7 +12,7 @@ void main() {
 
 final manager = OidcUserManager.lazy(
   discoveryDocumentUri: OidcUtils.getOpenIdConfigWellKnownUri(
-    Uri.parse('https://authentik.jeanmomo.ovh/application/o/jean-momo-oidc/'),
+    Uri.parse('https://authentik.jeanmomo.ovh/application/o/jean-momo-oidc'),
   ),
   clientCredentials: OidcClientAuthentication.none(
     clientId: 'x6iTsUUU09S2uNlEzZuuvxB6oa7YPiOxOY3sI30a',
