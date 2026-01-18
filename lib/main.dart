@@ -19,9 +19,7 @@ final manager = OidcUserManager.lazy(
   ),
   store: OidcDefaultStore(),
   settings: OidcUserManagerSettings(
-    redirectUri: kIsWeb
-        ? Uri.parse('https://jeanmomo.ovh/oicd-callback/')
-        : Uri.parse('ovh.jeanmomo.jeanmomo://callback'),
+    redirectUri: Uri.parse('ovh.jeanmomo.jeanmomo://callback'),
   ),
 );
 
@@ -41,10 +39,15 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _initAndListen();
+    if (!kIsWeb) {
+      _oidcInitAndListen();
+    } else {
+      _loginComplete = true;
+      _loginSuccess = true;
+    }
   }
 
-  Future<void> _initAndListen() async {
+  Future<void> _oidcInitAndListen() async {
     await manager.init();
     _userSub = manager.userChanges().listen((user) {
       setState(() {
