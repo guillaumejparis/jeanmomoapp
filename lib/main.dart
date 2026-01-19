@@ -16,7 +16,9 @@ final manager = OidcUserManager.lazy(
   ),
   store: OidcDefaultStore(),
   settings: OidcUserManagerSettings(
-    redirectUri: Uri.parse('ovh.jeanmomo.jeanmomo://callback'),
+    redirectUri: kIsWeb
+        ? Uri.parse('https://www.jeanmomo.ovh/oidc/redirect.html')
+        : Uri.parse('ovh.jeanmomo.jeanmomo://callback'),
   ),
 );
 
