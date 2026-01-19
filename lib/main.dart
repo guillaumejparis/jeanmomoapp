@@ -2,13 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
 import 'package:oidc/oidc.dart';
 import 'package:oidc_default_store/oidc_default_store.dart';
 import 'open_url.dart';
-
-void main() {
-  runApp(const MyApp());
-}
 
 final manager = OidcUserManager.lazy(
   discoveryDocumentUri: OidcUtils.getOpenIdConfigWellKnownUri(
@@ -23,6 +20,17 @@ final manager = OidcUserManager.lazy(
   ),
 );
 
+bool loginSuccess = false;
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await manager.init();
+  await manager.userChanges().first.then((user) {
+    loginSuccess = user != null;
+  });
+  runApp(MyApp());
+}
+
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -31,47 +39,34 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late final StreamSubscription _userSub;
-  bool _loginComplete = false;
-  bool _loginSuccess = false;
+  StreamSubscription? _userSub;
+  bool _loginComplete = true;
   String? _loginError;
 
   @override
   void initState() {
     super.initState();
-    if (!kIsWeb) {
-      _oidcInitAndListen();
-    } else {
-      _loginComplete = true;
-      _loginSuccess = true;
-    }
-  }
-
-  Future<void> _oidcInitAndListen() async {
-    await manager.init();
     _userSub = manager.userChanges().listen((user) {
       setState(() {
         _loginComplete = true;
-        _loginSuccess = user != null;
-        _loginError = user == null ? 'User not logged in.' : null;
+        loginSuccess = user != null;
       });
     });
-    await _doLogin();
   }
 
   @override
   void dispose() {
-    _userSub.cancel();
+    _userSub?.cancel();
     super.dispose();
   }
 
-  Future<void> _doLogin() async {
+  void _doLogin() {
+    _loginComplete = false;
     try {
-      await manager.loginAuthorizationCodeFlow();
+      manager.loginAuthorizationCodeFlow();
     } catch (e) {
       setState(() {
-        _loginComplete = true;
-        _loginSuccess = false;
+        loginSuccess = false;
         _loginError = e.toString();
       });
     }
@@ -79,36 +74,32 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    Widget homeWidget;
     if (!_loginComplete) {
-      return const MaterialApp(
-        home: Scaffold(body: Center(child: CircularProgressIndicator())),
-        debugShowCheckedModeBanner: false,
+      homeWidget = const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
       );
-    }
-    if (!_loginSuccess) {
-      return MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+    } else if (!loginSuccess) {
+      homeWidget = Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_loginError != null && _loginError!.isNotEmpty)
                 Text('Login failed: $_loginError'),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _loginComplete = false;
-                    });
-                    _doLogin();
-                  },
-                  child: const Text('Retry Login'),
-                ),
-              ],
-            ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  _doLogin();
+                },
+                child: const Text('Login'),
+              ),
+            ],
           ),
         ),
-        debugShowCheckedModeBanner: false,
       );
+    } else {
+      homeWidget = const HomePage();
     }
     return MaterialApp(
       title: 'Jean Momo',
@@ -129,8 +120,7 @@ class _MyAppState extends State<MyApp> {
         brightness: Brightness.dark,
       ),
       themeMode: ThemeMode.system,
-      home: const HomePage(),
-      debugShowCheckedModeBanner: false,
+      home: homeWidget,
     );
   }
 }
