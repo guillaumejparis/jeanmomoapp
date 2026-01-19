@@ -49,9 +49,9 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _userSub = manager.userChanges().listen((user) {
+      loginSuccess = user != null;
       setState(() {
         _loginComplete = true;
-        loginSuccess = user != null;
       });
     });
   }
@@ -63,12 +63,14 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _doLogin() {
-    _loginComplete = false;
+    setState(() {
+      _loginComplete = false;
+    });
     try {
       manager.loginAuthorizationCodeFlow();
     } catch (e) {
+      loginSuccess = false;
       setState(() {
-        loginSuccess = false;
         _loginError = e.toString();
       });
     }
