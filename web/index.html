@@ -33,6 +33,49 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+</body>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    #splash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      z-index: 9999;
+      transition: opacity 0.3s;
+    }
+    @media (prefers-color-scheme: dark) {
+      #splash {
+        background: #171216;
+      }
+    }
+    #splash img {
+      width: 128px;
+      height: 128px;
+      border-radius: 32px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+    }
+  </style>
+  <div id="splash">
+    <img src="icons/Icon-192.png" alt="Logo">
+  </div>
+  <script>
+    window.addEventListener('flutter-first-frame', function() {
+      var splash = document.getElementById('splash');
+      if (splash) splash.style.opacity = 0;
+      setTimeout(function() {
+        if (splash) splash.remove();
+      }, 350);
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
