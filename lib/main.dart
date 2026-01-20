@@ -19,6 +19,7 @@ final manager = OidcUserManager.lazy(
     redirectUri: kIsWeb
         ? Uri.parse('https://www.jeanmomo.ovh/oidc/redirect.html')
         : Uri.parse('ovh.jeanmomo.jeanmomo://callback'),
+    scope: ['openid', 'email', 'profile', 'offline_access'],
   ),
 );
 
