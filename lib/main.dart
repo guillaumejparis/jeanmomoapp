@@ -25,14 +25,13 @@ final manager = OidcUserManager.lazy(
   ),
 );
 
-bool loginSuccess = false;
+bool loginSuccess = true;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await manager.init();
-  await manager.userChanges().first.then((user) {
-    loginSuccess = user != null;
-  });
+  loginSuccess = manager.currentUser != null;
+  print('loginSuccess: $loginSuccess');
   runApp(MyApp());
 }
 
@@ -43,37 +42,62 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   StreamSubscription? _userSub;
   bool _loginComplete = true;
+
   String? _loginError;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _userSub = manager.userChanges().listen((user) {
-      loginSuccess = user != null;
-      setState(() {
-        _loginComplete = true;
-      });
+      print('User changed: $user');
+      if (user != null) {
+        loginSuccess = true;
+        setState(() {
+          _loginComplete = true;
+        });
+      }
     });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _userSub?.cancel();
     super.dispose();
+  }
+
+  @override
+  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (state == AppLifecycleState.resumed) {
+      try {
+        if (await manager.refreshToken() == null) {
+          loginSuccess = false;
+        }
+      } catch (e) {
+        loginSuccess = false;
+        setState(() {
+          _loginComplete = true;
+          _loginError = e.toString();
+        });
+      }
+    }
   }
 
   void _doLogin() {
     setState(() {
       _loginComplete = false;
     });
+
     try {
       manager.loginAuthorizationCodeFlow();
     } catch (e) {
       loginSuccess = false;
       setState(() {
+        _loginComplete = true;
         _loginError = e.toString();
       });
     }
@@ -106,7 +130,7 @@ class _MyAppState extends State<MyApp> {
         ),
       );
     } else {
-      homeWidget = const HomePage();
+      homeWidget = HomePage((url) => openUrl(url, context));
     }
     return MaterialApp(
       title: 'Jean Momo',
@@ -133,8 +157,8 @@ class _MyAppState extends State<MyApp> {
 }
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
+  const HomePage(this.onOpenUrl, {super.key});
+  final void Function(String url) onOpenUrl;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -158,21 +182,20 @@ class HomePage extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     ElevatedButton(
-                      onPressed: () =>
-                          openUrl('https://bw.jeanmomo.ovh/', context),
+                      onPressed: () => onOpenUrl('https://bw.jeanmomo.ovh/'),
                       child: const Text('Bitwarden'),
                     ),
                     const SizedBox(width: 16),
                     ElevatedButton(
                       onPressed: () =>
-                          openUrl('https://nextcloud.jeanmomo.ovh/', context),
+                          onOpenUrl('https://nextcloud.jeanmomo.ovh/'),
                       child: const Text('Nextcloud'),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () => openUrl('https://ha.jeanmomo.ovh/', context),
+                  onPressed: () => onOpenUrl('https://ha.jeanmomo.ovh/'),
                   child: const Text('Home Assistant'),
                 ),
                 const SizedBox(height: 16),
@@ -181,21 +204,20 @@ class HomePage extends StatelessWidget {
                   children: [
                     ElevatedButton(
                       onPressed: () =>
-                          openUrl('https://radarr.jeanmomo.ovh/', context),
+                          onOpenUrl('https://radarr.jeanmomo.ovh/'),
                       child: const Text('Radarr'),
                     ),
                     const SizedBox(width: 16),
                     ElevatedButton(
                       onPressed: () =>
-                          openUrl('https://sonarr.jeanmomo.ovh/', context),
+                          onOpenUrl('https://sonarr.jeanmomo.ovh/'),
                       child: const Text('Sonarr'),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () =>
-                      openUrl('https://jellyfin.jeanmomo.ovh/', context),
+                  onPressed: () => onOpenUrl('https://jellyfin.jeanmomo.ovh/'),
                   child: const Text('Jellyfin'),
                 ),
                 const SizedBox(height: 16),
@@ -204,13 +226,13 @@ class HomePage extends StatelessWidget {
                   children: [
                     ElevatedButton(
                       onPressed: () =>
-                          openUrl('https://sabnzbd.jeanmomo.ovh/', context),
+                          onOpenUrl('https://sabnzbd.jeanmomo.ovh/'),
                       child: const Text('SABnzbd'),
                     ),
                     const SizedBox(width: 16),
                     ElevatedButton(
                       onPressed: () =>
-                          openUrl('https://qbittorrent.jeanmomo.ovh/', context),
+                          onOpenUrl('https://qbittorrent.jeanmomo.ovh/'),
                       child: const Text('qBittorrent'),
                     ),
                   ],
@@ -221,21 +243,20 @@ class HomePage extends StatelessWidget {
                   children: [
                     TextButton(
                       onPressed: () =>
-                          openUrl('https://beszel.jeanmomo.ovh/', context),
+                          onOpenUrl('https://beszel.jeanmomo.ovh/'),
                       child: const Text('Beszel'),
                     ),
                     const SizedBox(width: 16),
                     TextButton(
-                      onPressed: () => openUrl(
+                      onPressed: () => onOpenUrl(
                         'https://guillaumejparis.github.io/recipes/',
-                        context,
                       ),
                       child: const Text('Basilic'),
                     ),
                     const SizedBox(width: 16),
                     TextButton(
                       onPressed: () =>
-                          openUrl('https://authentik.jeanmomo.ovh/', context),
+                          onOpenUrl('https://authentik.jeanmomo.ovh/'),
                       child: const Text('Authentik'),
                     ),
                   ],
