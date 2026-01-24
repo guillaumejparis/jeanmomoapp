@@ -213,6 +213,12 @@ class HomePage extends StatelessWidget {
                           onOpenUrl('https://sonarr.jeanmomo.ovh/'),
                       child: const Text('Sonarr'),
                     ),
+                    const SizedBox(width: 16),
+                    ElevatedButton(
+                      onPressed: () =>
+                          onOpenUrl('https://prowlarr.jeanmomo.ovh/'),
+                      child: const Text('Prowlarr'),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -258,6 +264,11 @@ class HomePage extends StatelessWidget {
                       onPressed: () =>
                           onOpenUrl('https://authentik.jeanmomo.ovh/'),
                       child: const Text('Authentik'),
+                    ),
+                    const SizedBox(width: 16),
+                    TextButton(
+                      onPressed: () => onOpenUrl('https://psacc.jeanmomo.ovh/'),
+                      child: const Text('Psacc'),
                     ),
                   ],
                 ),
