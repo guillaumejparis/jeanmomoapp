@@ -15,7 +15,7 @@ RUN flutter pub get
 COPY . .
 
 # Build the web release
-RUN flutter build web --release --base-href /
+RUN flutter build web --wasm --release --base-href /
 
 # --- Stage 2: Serve with Nginx ---
 FROM nginx:1.25-alpine AS production
