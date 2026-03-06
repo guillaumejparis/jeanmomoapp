@@ -1,0 +1,11 @@
+name: Manual
+
+on:
+  pull_request:
+
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    environment: manual
+    steps:
+      - run: echo "ok"
